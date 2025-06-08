@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoviSimple - Login</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="auth-container">
+            <h1>MoviSimple</h1>
+            <h2>Login</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="btn">Log in</button>
+            </form>
+            <p>Don't have an account? <a href="#" id="showRegister">Register</a></p>
+        </div>
+
+        <div class="auth-container" id="registerContainer" style="display: none;">
+            <h1>MoviSimple</h1>
+            <h2>Register</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="regName">Name:</label>
+                    <input type="text" id="regName" required>
+                </div>
+                <div class="form-group">
+                    <label for="regEmail">Email:</label>
+                    <input type="email" id="regEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">Password:</label>
+                    <input type="password" id="regPassword" required>
+                </div>
+                <button type="submit" class="btn">Register</button>
+            </form>
+            <p>Already have an account? <a href="#" id="showLogin">Login</a></p>
+        </div>
+
+        <div class="app-container" id="appContainer" style="display: none;">
+            <h1>MoviSimple</h1>
+            <div class="user-info">
+                <p>Welcome, <span id="userName"></span>!</p>
+                <button id="logoutBtn" class="btn-small">Logout</button>
+            </div>
+            
+            <div class="graph-container">
+                <canvas id="graphCanvas" width="600" height="400"></canvas>
+                <div class="controls">
+                    <div class="form-group">
+                        <label for="sourceNode">Origin:</label>
+                        <select id="sourceNode">
+                            <option value="0">Node 1</option>
+                            <option value="1">Node 2</option>
+                            <option value="2">Node 3</option>
+                            <option value="3">Node 4</option>
+                            <option value="4">Node 5</option>
+                            <option value="5">Node 6</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="targetNode">Destination:</label>
+                        <select id="targetNode">
+                            <option value="0">Node 1</option>
+                            <option value="1">Node 2</option>
+                            <option value="2">Node 3</option>
+                            <option value="3">Node 4</option>
+                            <option value="4">Node 5</option>
+                            <option value="5">Node 6</option>
+                        </select>
+                    </div>
+                    <button id="calculateBtn" class="btn">Calculate Route</button>
+                </div>
+            </div>
+            
+            <div id="routeInfo" style="display: none;">
+                <h3>Route Information</h3>
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <p>Progress: <span id="progressText">0%</span></p>
+                <div id="routeDetails">
+                    <p>Total time: <span id="totalTime">0</span> seconds</p>
+                    <p>Cost: $<span id="totalCost">0.00</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script src="graph.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
