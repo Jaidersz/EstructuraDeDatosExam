@@ -65,6 +65,86 @@ class AuthService {
   }
 }
 
+// Graph class
+class GraphSimple {
+  constructor() {
+    this.nodes = 6
+    this.adjacencyList = Array.from({ length: this.nodes }, () => [])
+    this.nodePositions = []
+  }
+
+  addEdge(u, v, weight) {
+    this.adjacencyList[u].push({ node: v, weight })
+    this.adjacencyList[v].push({ node: u, weight })
+  }
+
+  setNodePositions(positions) {
+    this.nodePositions = positions
+  }
+
+  dijkstraSimple(source) {
+    const distances = Array(this.nodes).fill(Number.POSITIVE_INFINITY)
+    const visited = Array(this.nodes).fill(false)
+    const previous = Array(this.nodes).fill(null)
+
+    distances[source] = 0
+
+    for (let i = 0; i < this.nodes; i++) {
+      let minDistance = Number.POSITIVE_INFINITY
+      let minNode = -1
+
+      for (let j = 0; j < this.nodes; j++) {
+        if (!visited[j] && distances[j] < minDistance) {
+          minDistance = distances[j]
+          minNode = j
+        }
+      }
+
+      if (minNode === -1) break
+
+      visited[minNode] = true
+
+      for (const edge of this.adjacencyList[minNode]) {
+        const { node, weight } = edge
+
+        if (!visited[node]) {
+          const newDistance = distances[minNode] + weight
+
+          if (newDistance < distances[node]) {
+            distances[node] = newDistance
+            previous[node] = minNode
+          }
+        }
+      }
+    }
+
+    return { distances, previous }
+  }
+
+  findShortestPath(source, target) {
+    const { distances, previous } = this.dijkstraSimple(source)
+
+    if (distances[target] === Number.POSITIVE_INFINITY) {
+      return { path: [], distance: Number.POSITIVE_INFINITY }
+    }
+
+    const path = []
+    let current = target
+
+    while (current !== null) {
+      path.unshift(current)
+      current = previous[current]
+    }
+
+    return { path, distance: distances[target] }
+  }
+
+  getEdgeWeight(u, v) {
+    const edge = this.adjacencyList[u].find((e) => e.node === v)
+    return edge ? edge.weight : Number.POSITIVE_INFINITY
+  }
+}
+
 // Initialize auth service
 const authService = new AuthService()
 
@@ -101,7 +181,7 @@ function initGraph() {
   const positions = []
 
   for (let i = 0; i < graph.nodes; i++) {
-    const angle = (i * 2 * Math.PI) / graph.nodes - Math.PI / 2 // Start from top
+    const angle = (i * 2 * Math.PI) / graph.nodes - Math.PI / 2
     positions.push({
       x: centerX + radius * Math.cos(angle),
       y: centerY + radius * Math.sin(angle),
@@ -114,29 +194,17 @@ function initGraph() {
   drawGraph()
 }
 
-// DOM elements
-const canvasElement = document.getElementById("graphCanvas")
-const sourceNodeSelectElement = document.getElementById("sourceNode")
-const targetNodeSelectElement = document.getElementById("targetNode")
-const calculateBtnElement = document.getElementById("calculateBtn")
-const routeInfoElement = document.getElementById("routeInfo")
-const progressBarElement = document.getElementById("progressBar")
-const progressTextElement = document.getElementById("progressText")
-const totalTimeSpanElement = document.getElementById("totalTime")
-const totalCostSpanElement = document.getElementById("totalCost")
-
 // Draw the graph
 function drawGraph(path = []) {
   if (!ctx || !graph) return
 
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-  // Draw edges first (so they appear behind nodes)
+  // Draw edges first
   for (let i = 0; i < graph.nodes; i++) {
     for (const edge of graph.adjacencyList[i]) {
       const { node: j, weight } = edge
 
-      // Only draw each edge once (when i < j)
       if (i < j) {
         const isInPath =
           path.length > 1 && path.includes(i) && path.includes(j) && Math.abs(path.indexOf(i) - path.indexOf(j)) === 1
@@ -151,7 +219,7 @@ function drawGraph(path = []) {
     }
   }
 
-  // Draw nodes on top of edges
+  // Draw nodes
   for (let i = 0; i < graph.nodes; i++) {
     let color = NODE_COLORS.DEFAULT
 
@@ -171,7 +239,6 @@ function drawGraph(path = []) {
 
 // Draw a node
 function drawNode(position, label, color) {
-  // Draw node circle
   ctx.beginPath()
   ctx.arc(position.x, position.y, 25, 0, 2 * Math.PI)
   ctx.fillStyle = color
@@ -180,7 +247,6 @@ function drawNode(position, label, color) {
   ctx.lineWidth = 2
   ctx.stroke()
 
-  // Draw node label
   ctx.fillStyle = "white"
   ctx.font = "bold 16px Arial"
   ctx.textAlign = "center"
@@ -190,7 +256,6 @@ function drawNode(position, label, color) {
 
 // Draw an edge
 function drawEdge(start, end, weight, color) {
-  // Draw edge line
   ctx.beginPath()
   ctx.moveTo(start.x, start.y)
   ctx.lineTo(end.x, end.y)
@@ -198,11 +263,9 @@ function drawEdge(start, end, weight, color) {
   ctx.lineWidth = 3
   ctx.stroke()
 
-  // Draw weight label
   const midX = (start.x + end.x) / 2
   const midY = (start.y + end.y) / 2
 
-  // Add a white background for better readability
   const text = weight + "s"
   ctx.font = "12px Arial"
   const textWidth = ctx.measureText(text).width
@@ -223,25 +286,20 @@ function drawEdge(start, end, weight, color) {
 // Animate the route
 function animateRoute(path) {
   animationInProgress = true
-
-  // Draw the path
   drawGraph(path)
 
-  // Calculate total time for the path
   let totalTime = 0
   for (let i = 0; i < path.length - 1; i++) {
     totalTime += graph.getEdgeWeight(path[i], path[i + 1])
   }
 
-  // Reset progress bar
   const progressBar = document.getElementById("progressBar")
   const progressText = document.getElementById("progressText")
   progressBar.style.width = "0%"
   progressText.textContent = "0%"
 
-  // Animate progress bar
   let elapsedTime = 0
-  const animationSpeed = 100 // ms per update
+  const animationSpeed = 100
 
   const animationInterval = setInterval(() => {
     elapsedTime += animationSpeed / 1000
@@ -250,7 +308,6 @@ function animateRoute(path) {
       elapsedTime = totalTime
       clearInterval(animationInterval)
 
-      // Reset after animation completes
       setTimeout(() => {
         resetRoute()
       }, 3000)
@@ -289,241 +346,191 @@ document.addEventListener("DOMContentLoaded", () => {
   const totalCostSpan = document.getElementById("totalCost")
 
   // Show register form
-  showRegisterLink.addEventListener("click", (e) => {
-    e.preventDefault()
-    authContainer.style.display = "none"
-    registerContainer.style.display = "block"
-  })
+  if (showRegisterLink) {
+    showRegisterLink.addEventListener("click", (e) => {
+      e.preventDefault()
+      authContainer.style.display = "none"
+      registerContainer.style.display = "block"
+    })
+  }
 
   // Show login form
-  showLoginLink.addEventListener("click", (e) => {
-    e.preventDefault()
-    registerContainer.style.display = "none"
-    authContainer.style.display = "block"
-  })
-
-  // Handle register form submission
-  registerForm.addEventListener("submit", (e) => {
-    e.preventDefault()
-
-    const name = document.getElementById("regName").value
-    const email = document.getElementById("regEmail").value
-    const password = document.getElementById("regPassword").value
-
-    const result = authService.register(name, email, password)
-
-    if (result.success) {
-      alert("Registration successful! Please login.")
+  if (showLoginLink) {
+    showLoginLink.addEventListener("click", (e) => {
+      e.preventDefault()
       registerContainer.style.display = "none"
       authContainer.style.display = "block"
-    } else {
-      alert(result.message)
-    }
-  })
+    })
+  }
+
+  // Handle register form submission
+  if (registerForm) {
+    registerForm.addEventListener("submit", (e) => {
+      e.preventDefault()
+
+      const name = document.getElementById("regName").value.trim()
+      const email = document.getElementById("regEmail").value.trim()
+      const password = document.getElementById("regPassword").value.trim()
+
+      if (!name || !email || !password) {
+        alert("Please fill in all fields")
+        return
+      }
+
+      const result = authService.register(name, email, password)
+
+      if (result.success) {
+        alert("Registration successful! Please login.")
+        registerContainer.style.display = "none"
+        authContainer.style.display = "block"
+        // Clear form
+        document.getElementById("regName").value = ""
+        document.getElementById("regEmail").value = ""
+        document.getElementById("regPassword").value = ""
+      } else {
+        alert(result.message)
+      }
+    })
+  }
 
   // Handle login form submission
-  loginForm.addEventListener("submit", (e) => {
-    e.preventDefault()
+  if (loginForm) {
+    loginForm.addEventListener("submit", (e) => {
+      e.preventDefault()
 
-    const email = document.getElementById("email").value
-    const password = document.getElementById("password").value
+      const email = document.getElementById("email").value.trim()
+      const password = document.getElementById("password").value.trim()
 
-    const result = authService.login(email, password)
+      if (!email || !password) {
+        alert("Please fill in all fields")
+        return
+      }
 
-    if (result.success) {
-      showApp()
-    } else {
-      alert(result.message)
-    }
-  })
+      console.log("Attempting login with:", email) // Debug log
+
+      const result = authService.login(email, password)
+
+      console.log("Login result:", result) // Debug log
+
+      if (result.success) {
+        console.log("Login successful, showing app") // Debug log
+        showApp()
+        // Clear form
+        document.getElementById("email").value = ""
+        document.getElementById("password").value = ""
+      } else {
+        alert(result.message)
+      }
+    })
+  }
 
   // Handle logout
-  logoutBtn.addEventListener("click", () => {
-    authService.logout()
-    hideApp()
-  })
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      authService.logout()
+      hideApp()
+    })
+  }
 
   // Show app interface
   function showApp() {
     const currentUser = authService.getCurrentUser()
-    if (currentUser) {
+    console.log("Current user:", currentUser) // Debug log
+
+    if (currentUser && userNameSpan) {
       userNameSpan.textContent = currentUser.name
-      authContainer.style.display = "none"
-      registerContainer.style.display = "none"
-      appContainer.style.display = "block"
+
+      if (authContainer) authContainer.style.display = "none"
+      if (registerContainer) registerContainer.style.display = "none"
+      if (appContainer) appContainer.style.display = "block"
+
+      console.log("App container shown, initializing graph") // Debug log
 
       // Initialize graph after showing the app
       setTimeout(() => {
         initGraph()
-      }, 100)
+        console.log("Graph initialized") // Debug log
+      }, 200)
+    } else {
+      console.log("No current user found") // Debug log
     }
   }
 
   // Hide app interface
   function hideApp() {
-    appContainer.style.display = "none"
-    authContainer.style.display = "block"
+    if (appContainer) appContainer.style.display = "none"
+    if (authContainer) authContainer.style.display = "block"
+    if (registerContainer) registerContainer.style.display = "none"
   }
 
   // Handle source node selection
-  sourceNodeSelect.addEventListener("change", () => {
-    selectedSource = Number.parseInt(sourceNodeSelect.value)
-    drawGraph()
-  })
+  if (sourceNodeSelect) {
+    sourceNodeSelect.addEventListener("change", () => {
+      selectedSource = Number.parseInt(sourceNodeSelect.value)
+      if (graph) drawGraph()
+    })
+  }
 
   // Handle target node selection
-  targetNodeSelect.addEventListener("change", () => {
-    selectedTarget = Number.parseInt(targetNodeSelect.value)
-    drawGraph()
-  })
+  if (targetNodeSelect) {
+    targetNodeSelect.addEventListener("change", () => {
+      selectedTarget = Number.parseInt(targetNodeSelect.value)
+      if (graph) drawGraph()
+    })
+  }
 
   // Handle calculate button click
-  calculateBtn.addEventListener("click", () => {
-    if (selectedSource === selectedTarget) {
-      alert("Origin and destination must be different")
-      return
-    }
+  if (calculateBtn) {
+    calculateBtn.addEventListener("click", () => {
+      if (selectedSource === selectedTarget) {
+        alert("Origin and destination must be different")
+        return
+      }
 
-    if (animationInProgress) {
-      return
-    }
+      if (animationInProgress) {
+        return
+      }
 
-    // Find shortest path
-    const { path, distance } = graph.findShortestPath(selectedSource, selectedTarget)
+      if (!graph) {
+        alert("Graph not initialized")
+        return
+      }
 
-    if (path.length === 0 || distance === Number.POSITIVE_INFINITY) {
-      alert("No path found between selected nodes")
-      return
-    }
+      // Find shortest path
+      const { path, distance } = graph.findShortestPath(selectedSource, selectedTarget)
 
-    // Show route info
-    routeInfo.style.display = "block"
+      if (path.length === 0 || distance === Number.POSITIVE_INFINITY) {
+        alert("No path found between selected nodes")
+        return
+      }
 
-    // Calculate total time and cost
-    const totalTime = distance
-    const totalCost = (totalTime * RATE_PER_SECOND).toFixed(2)
+      // Show route info
+      if (routeInfo) routeInfo.style.display = "block"
 
-    totalTimeSpan.textContent = totalTime
-    totalCostSpan.textContent = totalCost
+      // Calculate total time and cost
+      const totalTime = distance
+      const totalCost = (totalTime * RATE_PER_SECOND).toFixed(2)
 
-    // Start animation
-    animateRoute(path)
-  })
+      if (totalTimeSpan) totalTimeSpan.textContent = totalTime
+      if (totalCostSpan) totalCostSpan.textContent = totalCost
 
-  // Check if user is already logged in
+      // Start animation
+      animateRoute(path)
+    })
+  }
+
+  // Check if user is already logged in on page load
+  console.log("Checking if user is logged in...") // Debug log
   if (authService.isLoggedIn()) {
+    console.log("User is already logged in") // Debug log
     showApp()
+  } else {
+    console.log("No user logged in") // Debug log
   }
 
   // Set default values
   selectedSource = 0
   selectedTarget = 5
-  sourceNodeSelect.value = selectedSource
-  targetNodeSelect.value = selectedTarget
+  if (sourceNodeSelect) sourceNodeSelect.value = selectedSource
+  if (targetNodeSelect) targetNodeSelect.value = selectedTarget
 })
-
-// Graph class
-class GraphSimple {
-  constructor() {
-    this.nodes = 6 // Fixed number of nodes
-    this.adjacencyList = Array.from({ length: this.nodes }, () => [])
-    this.nodePositions = [] // Positions of nodes for drawing
-  }
-
-  addEdge(u, v, weight) {
-    this.adjacencyList[u].push({ node: v, weight })
-    this.adjacencyList[v].push({ node: u, weight }) // Assuming undirected graph
-  }
-
-  setNodePositions(positions) {
-    this.nodePositions = positions
-  }
-
-  // Method to find the shortest path using Dijkstra's algorithm
-  findShortestPath(startNode, endNode) {
-    const distances = new Array(this.nodes).fill(Number.POSITIVE_INFINITY)
-    const previous = new Array(this.nodes).fill(null)
-    const queue = new PriorityQueue()
-
-    distances[startNode] = 0
-    queue.enqueue(startNode, 0)
-
-    while (!queue.isEmpty()) {
-      const { element: currentNode, priority: currentPriority } = queue.dequeue()
-
-      if (currentPriority > distances[currentNode]) {
-        continue // Skip if we've already found a shorter path
-      }
-
-      for (const edge of this.adjacencyList[currentNode]) {
-        const { node: neighbor, weight } = edge
-        const newDist = distances[currentNode] + weight
-
-        if (newDist < distances[neighbor]) {
-          distances[neighbor] = newDist
-          previous[neighbor] = currentNode
-          queue.enqueue(neighbor, newDist)
-        }
-      }
-    }
-
-    // Reconstruct path
-    const path = []
-    let current = endNode
-    while (current !== null) {
-      path.unshift(current)
-      current = previous[current]
-    }
-
-    // If the start node is not in the path, then there's no valid path
-    if (path[0] !== startNode) {
-      return { path: [], distance: Number.POSITIVE_INFINITY }
-    }
-
-    return { path, distance: distances[endNode] }
-  }
-
-  getEdgeWeight(node1, node2) {
-    for (const edge of this.adjacencyList[node1]) {
-      if (edge.node === node2) {
-        return edge.weight
-      }
-    }
-    return Number.POSITIVE_INFINITY
-  }
-}
-
-// Priority Queue class (Min Priority Queue)
-class PriorityQueue {
-  constructor() {
-    this.items = []
-  }
-
-  enqueue(element, priority) {
-    const queueElement = { element, priority }
-
-    let added = false
-    for (let i = 0; i < this.items.length; i++) {
-      if (queueElement.priority < this.items[i].priority) {
-        this.items.splice(i, 0, queueElement)
-        added = true
-        break
-      }
-    }
-
-    if (!added) {
-      this.items.push(queueElement)
-    }
-  }
-
-  dequeue() {
-    if (this.isEmpty()) {
-      return "Underflow"
-    }
-    return this.items.shift()
-  }
-
-  isEmpty() {
-    return this.items.length === 0
-  }
-}
