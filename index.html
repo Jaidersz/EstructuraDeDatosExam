@@ -26,7 +26,7 @@
             max-width: 800px;
         }
         
-        .screen {
+        .auth-container, .app-container {
             background-color: white;
             border-radius: 10px;
             padding: 30px;
@@ -90,7 +90,6 @@
             cursor: pointer;
             font-size: 14px;
             transition: background-color 0.3s;
-            width: auto;
         }
         
         .btn-small:hover {
@@ -202,53 +201,53 @@
 <body>
     <div class="container">
         <!-- Login Screen -->
-        <div id="loginScreen" class="screen">
+        <div id="loginScreen" class="auth-container">
             <h1>MoviSimple</h1>
             <h2>Login</h2>
             <div id="loginMessage"></div>
-            
-            <div class="form-group">
-                <label for="loginEmail">Email:</label>
-                <input type="email" id="loginEmail" placeholder="Enter your email">
-            </div>
-            <div class="form-group">
-                <label for="loginPassword">Password:</label>
-                <input type="password" id="loginPassword" placeholder="Enter your password">
-            </div>
-            <button onclick="handleLogin()" class="btn">Log in</button>
-            
-            <p>Don't have an account? <a onclick="showRegister()">Register</a></p>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email:</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password:</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="btn">Log in</button>
+            </form>
+            <p>Don't have an account? <a id="showRegisterBtn">Register</a></p>
         </div>
 
         <!-- Register Screen -->
-        <div id="registerScreen" class="screen hidden">
+        <div id="registerScreen" class="auth-container hidden">
             <h1>MoviSimple</h1>
             <h2>Register</h2>
             <div id="registerMessage"></div>
-            
-            <div class="form-group">
-                <label for="registerName">Name:</label>
-                <input type="text" id="registerName" placeholder="Enter your name">
-            </div>
-            <div class="form-group">
-                <label for="registerEmail">Email:</label>
-                <input type="email" id="registerEmail" placeholder="Enter your email">
-            </div>
-            <div class="form-group">
-                <label for="registerPassword">Password:</label>
-                <input type="password" id="registerPassword" placeholder="Enter your password">
-            </div>
-            <button onclick="handleRegister()" class="btn">Register</button>
-            
-            <p>Already have an account? <a onclick="showLogin()">Login</a></p>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="registerName">Name:</label>
+                    <input type="text" id="registerName" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">Email:</label>
+                    <input type="email" id="registerEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Password:</label>
+                    <input type="password" id="registerPassword" required>
+                </div>
+                <button type="submit" class="btn">Register</button>
+            </form>
+            <p>Already have an account? <a id="showLoginBtn">Login</a></p>
         </div>
 
         <!-- App Screen -->
-        <div id="appScreen" class="screen hidden">
+        <div id="appScreen" class="app-container hidden">
             <h1>MoviSimple</h1>
             <div class="user-info">
                 <p>Welcome, <span id="userName"></span>!</p>
-                <button onclick="handleLogout()" class="btn-small">Logout</button>
+                <button id="logoutBtn" class="btn-small">Logout</button>
             </div>
             
             <div class="graph-container">
@@ -256,7 +255,7 @@
                 <div class="controls">
                     <div class="form-group">
                         <label for="sourceNode">Origin:</label>
-                        <select id="sourceNode" onchange="updateSource()">
+                        <select id="sourceNode">
                             <option value="0">Node 1</option>
                             <option value="1">Node 2</option>
                             <option value="2">Node 3</option>
@@ -267,7 +266,7 @@
                     </div>
                     <div class="form-group">
                         <label for="targetNode">Destination:</label>
-                        <select id="targetNode" onchange="updateTarget()">
+                        <select id="targetNode">
                             <option value="0">Node 1</option>
                             <option value="1">Node 2</option>
                             <option value="2">Node 3</option>
@@ -276,7 +275,7 @@
                             <option value="5" selected>Node 6</option>
                         </select>
                     </div>
-                    <button onclick="calculateRoute()" class="btn">Calculate Route</button>
+                    <button id="calculateBtn" class="btn">Calculate Route</button>
                 </div>
             </div>
             
@@ -401,183 +400,75 @@
 
         // User management functions
         function getUsers() {
-            try {
-                const users = localStorage.getItem('movisimple_users');
-                return users ? JSON.parse(users) : [];
-            } catch (e) {
-                console.error('Error getting users:', e);
-                return [];
-            }
+            const users = localStorage.getItem('movisimple_users');
+            return users ? JSON.parse(users) : [];
         }
 
         function saveUsers(users) {
-            try {
-                localStorage.setItem('movisimple_users', JSON.stringify(users));
-                return true;
-            } catch (e) {
-                console.error('Error saving users:', e);
-                return false;
-            }
+            localStorage.setItem('movisimple_users', JSON.stringify(users));
         }
 
         function getCurrentUser() {
-            try {
-                const user = localStorage.getItem('movisimple_current_user');
-                return user ? JSON.parse(user) : null;
-            } catch (e) {
-                console.error('Error getting current user:', e);
-                return null;
-            }
+            const user = localStorage.getItem('movisimple_current_user');
+            return user ? JSON.parse(user) : null;
         }
 
         function setCurrentUser(user) {
-            try {
-                localStorage.setItem('movisimple_current_user', JSON.stringify(user));
-                currentUser = user;
-                return true;
-            } catch (e) {
-                console.error('Error setting current user:', e);
-                return false;
-            }
+            localStorage.setItem('movisimple_current_user', JSON.stringify(user));
+            currentUser = user;
         }
 
         function clearCurrentUser() {
-            try {
-                localStorage.removeItem('movisimple_current_user');
-                currentUser = null;
-                return true;
-            } catch (e) {
-                console.error('Error clearing current user:', e);
-                return false;
+            localStorage.removeItem('movisimple_current_user');
+            currentUser = null;
+        }
+
+        function registerUser(name, email, password) {
+            const users = getUsers();
+            
+            // Check if user already exists
+            if (users.find(user => user.email === email)) {
+                return { success: false, message: 'Email already registered' };
             }
+
+            // Add new user
+            users.push({ name, email, password });
+            saveUsers(users);
+            
+            return { success: true, message: 'Registration successful' };
+        }
+
+        function loginUser(email, password) {
+            const users = getUsers();
+            const user = users.find(user => user.email === email && user.password === password);
+            
+            if (user) {
+                setCurrentUser({ name: user.name, email: user.email });
+                return { success: true, user: currentUser };
+            }
+            
+            return { success: false, message: 'Invalid email or password' };
         }
 
         // Screen management
         function showScreen(screenId) {
-            console.log('Showing screen:', screenId);
-            
-            // Hide all screens
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('registerScreen').classList.add('hidden');
             document.getElementById('appScreen').classList.add('hidden');
             
-            // Show selected screen
             document.getElementById(screenId).classList.remove('hidden');
         }
 
         function showMessage(elementId, message, type = 'error') {
             const messageEl = document.getElementById(elementId);
-            if (messageEl) {
-                messageEl.innerHTML = `<div class="message ${type}">${message}</div>`;
-                setTimeout(() => {
-                    messageEl.innerHTML = '';
-                }, 5000);
-            }
-        }
-
-        // Authentication functions
-        function showLogin() {
-            console.log('Showing login screen');
-            showScreen('loginScreen');
-        }
-
-        function showRegister() {
-            console.log('Showing register screen');
-            showScreen('registerScreen');
-        }
-
-        function handleRegister() {
-            console.log('Handle register called');
-            
-            const name = document.getElementById('registerName').value.trim();
-            const email = document.getElementById('registerEmail').value.trim();
-            const password = document.getElementById('registerPassword').value.trim();
-
-            console.log('Register data:', { name, email, password: '***' });
-
-            if (!name || !email || !password) {
-                showMessage('registerMessage', 'Please fill in all fields');
-                return;
-            }
-
-            const users = getUsers();
-            console.log('Current users:', users);
-            
-            // Check if user already exists
-            if (users.find(user => user.email === email)) {
-                showMessage('registerMessage', 'Email already registered');
-                return;
-            }
-
-            // Add new user
-            users.push({ name, email, password });
-            
-            if (saveUsers(users)) {
-                console.log('User registered successfully');
-                showMessage('registerMessage', 'Registration successful! Please login.', 'success');
-                
-                // Clear form
-                document.getElementById('registerName').value = '';
-                document.getElementById('registerEmail').value = '';
-                document.getElementById('registerPassword').value = '';
-                
-                setTimeout(() => {
-                    showLogin();
-                }, 2000);
-            } else {
-                showMessage('registerMessage', 'Error saving user data');
-            }
-        }
-
-        function handleLogin() {
-            console.log('Handle login called');
-            
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value.trim();
-
-            console.log('Login data:', { email, password: '***' });
-
-            if (!email || !password) {
-                showMessage('loginMessage', 'Please fill in all fields');
-                return;
-            }
-
-            const users = getUsers();
-            console.log('Checking against users:', users);
-            
-            const user = users.find(user => user.email === email && user.password === password);
-            
-            if (user) {
-                console.log('Login successful');
-                
-                if (setCurrentUser({ name: user.name, email: user.email })) {
-                    document.getElementById('userName').textContent = user.name;
-                    
-                    // Clear form
-                    document.getElementById('loginEmail').value = '';
-                    document.getElementById('loginPassword').value = '';
-                    
-                    showScreen('appScreen');
-                    setTimeout(initGraph, 200);
-                } else {
-                    showMessage('loginMessage', 'Error saving login data');
-                }
-            } else {
-                console.log('Login failed');
-                showMessage('loginMessage', 'Invalid email or password');
-            }
-        }
-
-        function handleLogout() {
-            console.log('Handle logout called');
-            clearCurrentUser();
-            showLogin();
+            messageEl.innerHTML = `<div class="message ${type}">${message}</div>`;
+            setTimeout(() => {
+                messageEl.innerHTML = '';
+            }, 5000);
         }
 
         // Graph functions
         function initGraph() {
-            console.log('Initializing graph');
-            
             graph = new GraphSimple();
 
             // Define edges
@@ -608,8 +499,6 @@
 
             graph.setNodePositions(positions);
             drawGraph();
-            
-            console.log('Graph initialized successfully');
         }
 
         function drawGraph(path = []) {
@@ -698,42 +587,6 @@
             ctx.fillText(text, midX, midY);
         }
 
-        function updateSource() {
-            selectedSource = parseInt(document.getElementById('sourceNode').value);
-            if (graph) drawGraph();
-        }
-
-        function updateTarget() {
-            selectedTarget = parseInt(document.getElementById('targetNode').value);
-            if (graph) drawGraph();
-        }
-
-        function calculateRoute() {
-            console.log('Calculate route called');
-            
-            if (selectedSource === selectedTarget) {
-                alert('Origin and destination must be different');
-                return;
-            }
-
-            if (animationInProgress || !graph) {
-                return;
-            }
-
-            const { path, distance } = graph.findShortestPath(selectedSource, selectedTarget);
-
-            if (path.length === 0 || distance === Number.POSITIVE_INFINITY) {
-                alert('No path found between selected nodes');
-                return;
-            }
-
-            document.getElementById('routeInfo').style.display = 'block';
-            document.getElementById('totalTime').textContent = distance;
-            document.getElementById('totalCost').textContent = (distance * RATE_PER_SECOND).toFixed(2);
-
-            animateRoute(path);
-        }
-
         function animateRoute(path) {
             animationInProgress = true;
             drawGraph(path);
@@ -775,22 +628,117 @@
             drawGraph();
         }
 
-        // Initialize on page load
-        window.onload = function() {
-            console.log('Page loaded, checking for existing user');
-            
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
             // Check if user is already logged in
             currentUser = getCurrentUser();
             if (currentUser) {
-                console.log('Found existing user:', currentUser);
                 document.getElementById('userName').textContent = currentUser.name;
                 showScreen('appScreen');
-                setTimeout(initGraph, 200);
-            } else {
-                console.log('No existing user, showing login');
-                showScreen('loginScreen');
+                setTimeout(initGraph, 100);
             }
-        };
+
+            // Show register screen
+            document.getElementById('showRegisterBtn').addEventListener('click', function() {
+                showScreen('registerScreen');
+            });
+
+            // Show login screen
+            document.getElementById('showLoginBtn').addEventListener('click', function() {
+                showScreen('loginScreen');
+            });
+
+            // Register form
+            document.getElementById('registerForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const name = document.getElementById('registerName').value.trim();
+                const email = document.getElementById('registerEmail').value.trim();
+                const password = document.getElementById('registerPassword').value.trim();
+
+                if (!name || !email || !password) {
+                    showMessage('registerMessage', 'Please fill in all fields');
+                    return;
+                }
+
+                const result = registerUser(name, email, password);
+                
+                if (result.success) {
+                    showMessage('registerMessage', 'Registration successful! Please login.', 'success');
+                    setTimeout(() => {
+                        showScreen('loginScreen');
+                    }, 2000);
+                } else {
+                    showMessage('registerMessage', result.message);
+                }
+            });
+
+            // Login form
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const email = document.getElementById('loginEmail').value.trim();
+                const password = document.getElementById('loginPassword').value.trim();
+
+                if (!email || !password) {
+                    showMessage('loginMessage', 'Please fill in all fields');
+                    return;
+                }
+
+                const result = loginUser(email, password);
+                
+                if (result.success) {
+                    document.getElementById('userName').textContent = result.user.name;
+                    showScreen('appScreen');
+                    setTimeout(initGraph, 100);
+                } else {
+                    showMessage('loginMessage', result.message);
+                }
+            });
+
+            // Logout
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                clearCurrentUser();
+                showScreen('loginScreen');
+            });
+
+            // Source node selection
+            document.getElementById('sourceNode').addEventListener('change', function() {
+                selectedSource = parseInt(this.value);
+                if (graph) drawGraph();
+            });
+
+            // Target node selection
+            document.getElementById('targetNode').addEventListener('change', function() {
+                selectedTarget = parseInt(this.value);
+                if (graph) drawGraph();
+            });
+
+            // Calculate route
+            document.getElementById('calculateBtn').addEventListener('click', function() {
+                if (selectedSource === selectedTarget) {
+                    alert('Origin and destination must be different');
+                    return;
+                }
+
+                if (animationInProgress || !graph) {
+                    return;
+                }
+
+                const { path, distance } = graph.findShortestPath(selectedSource, selectedTarget);
+
+                if (path.length === 0 || distance === Number.POSITIVE_INFINITY) {
+                    alert('No path found between selected nodes');
+                    return;
+                }
+
+                document.getElementById('routeInfo').style.display = 'block';
+                document.getElementById('totalTime').textContent = distance;
+                document.getElementById('totalCost').textContent = (distance * RATE_PER_SECOND).toFixed(2);
+
+                animateRoute(path);
+            });
+        });
     </script>
 </body>
 </html>
